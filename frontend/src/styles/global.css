@@ -35,6 +35,75 @@ body {
   background: #a8a8a8;
 }
 
+.filter-section {
+  margin-bottom: 24px;
+}
+
+.filter-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #262626;
+  font-size: 14px;
+}
+
+.stats-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 24px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.stats-value {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 8px 0;
+}
+
+.stats-label {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.table-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: #8c8c8c;
+}
+
+.empty-state-icon {
+  font-size: 64px;
+  color: #d9d9d9;
+  margin-bottom: 16px;
+}
+
+.empty-state-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: #595959;
+  margin-bottom: 8px;
+}
+
+.empty-state-description {
+  font-size: 14px;
+  color: #8c8c8c;
+}
+
 @media (max-width: 768px) {
   .ant-layout-header {
     padding: 0 16px !important;
@@ -43,10 +112,30 @@ body {
   .ant-layout-content {
     padding: 16px !important;
   }
+
+  .stats-card {
+    padding: 16px;
+  }
+
+  .stats-value {
+    font-size: 24px;
+  }
+
+  .ant-table {
+    font-size: 12px;
+  }
 }
 
 @media (max-width: 576px) {
   .ant-layout-content > div {
     padding: 16px !important;
+  }
+
+  .filter-section {
+    margin-bottom: 16px;
+  }
+
+  .table-actions {
+    flex-direction: column;
   }
 }

@@ -1,5 +1,7 @@
 import Sales from '../models/Sales.js';
-import { parseCSV, transformCSVRecord, validateRecord } from '../utils/csvParser.js';
+import { transformCSVRecord, validateRecord } from '../utils/csvParser.js';
+import fs from 'fs';
+import { parse } from 'csv-parse';
 
 const loadDataFromCSV = async (csvFilePath) => {
   try {
@@ -10,36 +12,68 @@ const loadDataFromCSV = async (csvFilePath) => {
       return { success: true, count: existingCount, message: 'Data already loaded' };
     }
 
-    console.log('Starting CSV import...');
-    const rawRecords = await parseCSV(csvFilePath);
-    console.log(`Parsed ${rawRecords.length} records from CSV`);
-
-    const transformedRecords = rawRecords
-      .map(transformCSVRecord)
-      .filter(validateRecord);
-
-    console.log(`Validated ${transformedRecords.length} records`);
-
-    if (transformedRecords.length === 0) {
-      throw new Error('No valid records to import');
-    }
-
-    const batchSize = 1000;
+    console.log('Starting CSV import with streaming...');
+    
+    let batch = [];
     let importedCount = 0;
+    const batchSize = 500;
 
-    for (let i = 0; i < transformedRecords.length; i += batchSize) {
-      const batch = transformedRecords.slice(i, i + batchSize);
-      await Sales.insertMany(batch, { ordered: false });
-      importedCount += batch.length;
-      console.log(`Imported ${importedCount} / ${transformedRecords.length} records`);
-    }
+    const parser = parse({
+      columns: true,
+      skip_empty_lines: true,
+      trim: true,
+      cast: false
+    });
 
-    console.log('CSV import completed successfully');
-    return { 
-      success: true, 
-      count: importedCount, 
-      message: 'Data imported successfully' 
+    const processRecord = async (record) => {
+      try {
+        const transformed = transformCSVRecord(record);
+        if (validateRecord(transformed)) {
+          batch.push(transformed);
+          
+          if (batch.length >= batchSize) {
+            await Sales.insertMany(batch, { ordered: false });
+            importedCount += batch.length;
+            console.log(`Imported ${importedCount} records...`);
+            batch = [];
+          }
+        }
+      } catch (err) {
+        console.error('Error processing record:', err.message);
+      }
     };
+
+    return new Promise((resolve, reject) => {
+      parser.on('readable', async function() {
+        let record;
+        while ((record = parser.read()) !== null) {
+          await processRecord(record);
+        }
+      });
+
+      parser.on('error', function(err) {
+        reject(err);
+      });
+
+      parser.on('end', async function() {
+        try {
+          if (batch.length > 0) {
+            await Sales.insertMany(batch, { ordered: false });
+            importedCount += batch.length;
+          }
+          console.log(`CSV import completed successfully. Total: ${importedCount} records`);
+          resolve({ 
+            success: true, 
+            count: importedCount, 
+            message: 'Data imported successfully' 
+          });
+        } catch (error) {
+          reject(error);
+        }
+      });
+
+      fs.createReadStream(csvFilePath).pipe(parser);
+    });
 
   } catch (error) {
     console.error('Error loading data from CSV:', error);

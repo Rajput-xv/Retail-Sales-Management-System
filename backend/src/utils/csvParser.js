@@ -1,39 +1,4 @@
-import fs from 'fs';
-import { parse } from 'csv-parse';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const parseCSV = (filePath) => {
-  return new Promise((resolve, reject) => {
-    const records = [];
-    const parser = parse({
-      columns: true,
-      skip_empty_lines: true,
-      trim: true,
-      cast: false
-    });
-
-    parser.on('readable', function() {
-      let record;
-      while ((record = parser.read()) !== null) {
-        records.push(record);
-      }
-    });
-
-    parser.on('error', function(err) {
-      reject(err);
-    });
-
-    parser.on('end', function() {
-      resolve(records);
-    });
-
-    fs.createReadStream(filePath).pipe(parser);
-  });
-};
 
 const transformCSVRecord = (record) => {
   const parseDate = (dateStr) => {
@@ -101,4 +66,4 @@ const validateRecord = (record) => {
   return true;
 };
 
-export { parseCSV, transformCSVRecord, validateRecord };
+export { transformCSVRecord, validateRecord };
